@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aditya Bilawar | Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #16161a;
+      --card: rgba(28, 28, 32, 0.75);
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --accent: #4f46e5;
+      --vignette: radial-gradient(ellipse at center, rgba(22,22,26,0.6) 0%, transparent 50%);
+      --overlay-bg: rgba(0, 0, 0, 0.45);
+      --nav-bg: rgba(28, 28, 32, 0.94);
+      --tooltip-bg: rgba(28, 28, 34, 0.95);
+      --tooltip-text: #e2e8f0;
+      --tooltip-muted: rgba(180,180,195,0.7);
+    }
+
+    body.theme-light {
+      color-scheme: light;
+      --bg: #f0f1f4;
+      --card: rgba(255, 255, 255, 0.9);
+      --border: rgba(0, 0, 0, 0.1);
+      --text: #111113;
+      --muted: #4b5563;
+      --accent: #4f46e5;
+      --vignette: radial-gradient(ellipse at center, rgba(248,249,252,0.8) 0%, transparent 55%);
+      --overlay-bg: rgba(0, 0, 0, 0.3);
+      --nav-bg: rgba(255, 255, 255, 0.97);
+      --tooltip-bg: rgba(255, 255, 255, 0.98);
+      --tooltip-text: #111113;
+      --tooltip-muted: rgba(55, 65, 81, 0.9);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    canvas#graph {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      background: var(--vignette);
+      pointer-events: none;
+    }
+
+    /* Identity block – side, not blocking graph */
+    .identity {
+      position: fixed;
+      top: 1.5rem;
+      left: 1.5rem;
+      z-index: 10;
+      pointer-events: auto;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    .identity h1 {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+
+    .identity .subtitle {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    /* Hamburger – open nav */
+    .menu-toggle {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 20;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .menu-toggle:hover,
+    .menu-toggle:focus-visible {
+      border-color: rgba(79, 70, 229, 0.6);
+      color: var(--accent);
+    }
+
+    .menu-toggle .fa-bars { font-size: 1.25rem; }
+    .menu-toggle .fa-times { font-size: 1.25rem; display: none; }
+    .menu-toggle.open .fa-bars { display: none; }
+    .menu-toggle.open .fa-times { display: block; }
+
+    /* Theme toggle – light/dark */
+    .theme-toggle {
+      position: fixed;
+      top: 1.5rem;
+      right: 5rem;
+      z-index: 20;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .theme-toggle:hover,
+    .theme-toggle:focus-visible {
+      border-color: rgba(79, 70, 229, 0.6);
+      color: var(--accent);
+    }
+    .theme-toggle .fa-moon { display: none; }
+    .theme-toggle .fa-sun { display: none; }
+    body:not(.theme-light) .theme-toggle .fa-sun { display: block; font-size: 1.15rem; }
+    body.theme-light .theme-toggle .fa-moon { display: block; font-size: 1.15rem; }
+
+    /* Nav panel – hidable sidebar with links */
+    .nav-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 15;
+      background: var(--overlay-bg);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+    .nav-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .nav-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: min(280px, 85vw);
+      height: 100vh;
+      z-index: 18;
+      background: var(--nav-bg);
+      border-left: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 5rem 1.5rem 2rem;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      box-shadow: -20px 0 60px rgba(0, 0, 0, 0.4);
+    }
+    .nav-panel.open {
+      transform: translateX(0);
+    }
+
+    .nav-panel .links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .nav-panel .links a {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      color: var(--text);
+      transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .nav-panel .links a:hover,
+    .nav-panel .links a:focus-visible {
+      transform: translateX(-4px);
+      border-color: rgba(79, 70, 229, 0.7);
+      color: var(--accent);
+    }
+
+    #tooltip {
+      position: fixed;
+      z-index: 50;
+      padding: 6px 12px 6px 14px;
+      background: var(--tooltip-bg);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--tt-color, rgba(255,255,255,0.2));
+      border-radius: 6px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    #tooltip.visible { opacity: 1; }
+    #tooltip strong {
+      display: block;
+      font: 600 12px/1.4 'Inter', sans-serif;
+      color: var(--tooltip-text);
+    }
+    #tooltip span {
+      display: block;
+      font: 500 9px/1.4 'Inter', sans-serif;
+      color: var(--tooltip-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-top: 1px;
+    }
+
+    @media (max-width: 480px) {
+      .identity { top: 1rem; left: 1rem; padding: 0.75rem 1rem; }
+      .theme-toggle { right: 4rem; width: 42px; height: 42px; }
+      .menu-toggle { width: 42px; height: 42px; }
+      .nav-panel .links a { width: 42px; height: 42px; }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    (function(){ try { var t = localStorage.getItem('theme'); if (t === 'light') document.body.classList.add('theme-light'); } catch (e) {} })();
+  </script>
+  <canvas id="graph" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <aside class="identity">
+    <h1>Aditya Bilawar</h1>
+    <p class="subtitle">CS student at Georgia Tech.</p>
+  </aside>
+
+  <button type="button" class="theme-toggle" aria-label="Switch to light mode">
+    <i class="fas fa-sun" aria-hidden="true"></i>
+    <i class="fas fa-moon" aria-hidden="true"></i>
+  </button>
+  <button type="button" class="menu-toggle" aria-label="Open menu" aria-expanded="false">
+    <i class="fas fa-bars" aria-hidden="true"></i>
+    <i class="fas fa-times" aria-hidden="true"></i>
+  </button>
+
+  <div class="nav-overlay" aria-hidden="true"></div>
+  <nav class="nav-panel" aria-label="Social links">
+    <div class="links">
+      <a href="https://github.com/adityabilawar" target="_blank" rel="noopener" aria-label="GitHub">
+        <i class="fab fa-github"></i>
+      </a>
+      <a href="https://www.linkedin.com/in/aditya-bilawar/" target="_blank" rel="noopener" aria-label="LinkedIn">
+        <i class="fab fa-linkedin-in"></i>
+      </a>
+      <a href="https://devpost.com/adityabilawar" target="_blank" rel="noopener" aria-label="Devpost">
+        <i class="fas fa-code"></i>
+      </a>
+      <a href="mailto:adityabilawar@gatech.edu" aria-label="Email">
+        <i class="fas fa-envelope"></i>
+      </a>
+    </div>
+  </nav>
+
+  <div id="tooltip"></div>
+
+  <script>
+    (function () {
+      var toggle = document.querySelector('.menu-toggle');
+      var overlay = document.querySelector('.nav-overlay');
+      var panel = document.querySelector('.nav-panel');
+      function open() {
+        toggle.classList.add('open');
+        toggle.setAttribute('aria-expanded', 'true');
+        toggle.setAttribute('aria-label', 'Close menu');
+        overlay.classList.add('visible');
+        panel.classList.add('open');
+      }
+      function close() {
+        toggle.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Open menu');
+        overlay.classList.remove('visible');
+        panel.classList.remove('open');
+      }
+      toggle.addEventListener('click', function () {
+        if (panel.classList.contains('open')) close(); else open();
+      });
+      overlay.addEventListener('click', close);
+    })();
+    (function () {
+      var themeBtn = document.querySelector('.theme-toggle');
+      function updateLabel() {
+        themeBtn.setAttribute('aria-label', document.body.classList.contains('theme-light') ? 'Switch to dark mode' : 'Switch to light mode');
+      }
+      updateLabel();
+      themeBtn.addEventListener('click', function () {
+        document.body.classList.toggle('theme-light');
+        try { localStorage.setItem('theme', document.body.classList.contains('theme-light') ? 'light' : 'dark'); } catch (e) {}
+        updateLabel();
+      });
+    })();
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+  (function () {
+    var TAU = Math.PI * 2;
+    var canvas = document.getElementById('graph');
+    var ctx = canvas.getContext('2d');
+    var tt = document.getElementById('tooltip');
+
+    var GC = {
+      a: [167,139,250], i: [96,165,250], v: [45,212,191],
+      b: [74,222,128],  f: [34,211,238], c: [251,191,36]
+    };
+    var GC_light = {
+      a: [124, 58, 237], i: [37, 99, 235],  v: [0, 150, 136],
+      b: [22, 163, 74],  f: [6, 182, 212],   c: [245, 158, 11]
+    };
+    var GL = {
+      a: 'Agentic AI & LLMs', i: 'AI Infrastructure', v: 'Data Engineering',
+      b: 'Backend & Cloud',   f: 'Frontend & Web',    c: 'Core CS & Math'
+    };
+    function isLight() { return document.body.classList.contains('theme-light'); }
+    function rgba(g, a) {
+      var c = isLight() ? GC_light[g] : GC[g];
+      return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')';
+    }
+
+    /* ───────────────────── NODES (159) ───────────────────── */
+    var nodes = [
+      // ── Agentic AI & LLM Frameworks (18) ──
+      {id:'OpenClaw',g:'a'},{id:'LangChain',g:'a'},{id:'LlamaIndex',g:'a'},
+      {id:'AutoGen',g:'a'},{id:'OpenAI',g:'a'},{id:'Anthropic',g:'a'},
+      {id:'Mistral',g:'a'},{id:'DSPy',g:'a'},{id:'CrewAI',g:'a'},
+      {id:'Semantic Kernel',g:'a'},{id:'Function Calling',g:'a'},{id:'Tool Use',g:'a'},
+      {id:'Agent Orchestration',g:'a'},{id:'Prompt Engineering',g:'a'},
+      {id:'Chain of Thought',g:'a'},{id:'ReAct',g:'a'},
+      {id:'Multi-Agent Systems',g:'a'},{id:'RAG',g:'a'},
+      // ── AI Infrastructure & Hardware (28) ──
+      {id:'PyTorch',g:'i'},{id:'JAX',g:'i'},{id:'CUDA',g:'i'},
+      {id:'Triton',g:'i'},{id:'vLLM',g:'i'},{id:'TensorRT-LLM',g:'i'},
+      {id:'Ray',g:'i'},{id:'Weights & Biases',g:'i'},{id:'Modal',g:'i'},
+      {id:'Hugging Face',g:'i'},{id:'ONNX',g:'i'},{id:'Transformers',g:'i'},
+      {id:'Attention Mechanism',g:'i'},{id:'Fine-tuning',g:'i'},{id:'RLHF',g:'i'},
+      {id:'Embeddings',g:'i'},{id:'Tokenization',g:'i'},
+      {id:'Inference Optimization',g:'i'},{id:'Training Pipelines',g:'i'},
+      {id:'LoRA',g:'i'},{id:'Flash Attention',g:'i'},{id:'DeepSpeed',g:'i'},
+      {id:'Model Parallelism',g:'i'},{id:'Mixed Precision',g:'i'},
+      {id:'Quantization',g:'i'},{id:'Distillation',g:'i'},
+      {id:'MLOps',g:'i'},{id:'Gradient Checkpointing',g:'i'},
+      // ── Vector Search & Data Engineering (26) ──
+      {id:'Pinecone',g:'v'},{id:'Qdrant',g:'v'},{id:'Milvus',g:'v'},
+      {id:'Weaviate',g:'v'},{id:'pgvector',g:'v'},{id:'ClickHouse',g:'v'},
+      {id:'Apache Kafka',g:'v'},{id:'Spark',g:'v'},{id:'Redis',g:'v'},
+      {id:'PostgreSQL',g:'v'},{id:'MongoDB',g:'v'},{id:'DynamoDB',g:'v'},
+      {id:'Cassandra',g:'v'},{id:'Neo4j',g:'v'},{id:'Elasticsearch',g:'v'},
+      {id:'Apache Flink',g:'v'},{id:'Apache Airflow',g:'v'},{id:'dbt',g:'v'},
+      {id:'Snowflake',g:'v'},{id:'ETL Pipelines',g:'v'},{id:'Data Pipelines',g:'v'},
+      {id:'Feature Store',g:'v'},{id:'Vector Search',g:'v'},
+      {id:'Stream Processing',g:'v'},{id:'OLAP',g:'v'},{id:'Data Lake',g:'v'},
+      // ── Modern Backend & Cloud Architecture (43) ──
+      {id:'Rust',g:'b'},{id:'Go',g:'b'},{id:'Python',g:'b'},
+      {id:'Node.js',g:'b'},{id:'FastAPI',g:'b'},{id:'gRPC',g:'b'},
+      {id:'GraphQL',g:'b'},{id:'Kubernetes',g:'b'},{id:'Docker',g:'b'},
+      {id:'Terraform',g:'b'},{id:'AWS',g:'b'},{id:'Cloudflare Workers',g:'b'},
+      {id:'Distributed Systems',g:'b'},{id:'Microservices',g:'b'},
+      {id:'C',g:'b'},{id:'C++',g:'b'},{id:'Java',g:'b'},{id:'Linux',g:'b'},
+      {id:'Nginx',g:'b'},{id:'Load Balancing',g:'b'},{id:'REST API',g:'b'},
+      {id:'WebSockets',g:'b'},{id:'HTTP/2',g:'b'},{id:'TCP/IP',g:'b'},
+      {id:'OAuth 2.0',g:'b'},{id:'JWT',g:'b'},{id:'TLS/SSL',g:'b'},
+      {id:'CI/CD',g:'b'},{id:'GitHub Actions',g:'b'},
+      {id:'Prometheus',g:'b'},{id:'Grafana',g:'b'},
+      {id:'Lambda',g:'b'},{id:'S3',g:'b'},{id:'EC2',g:'b'},
+      {id:'GCP',g:'b'},{id:'Azure',g:'b'},{id:'Helm',g:'b'},
+      {id:'Service Mesh',g:'b'},{id:'Event-Driven Arch.',g:'b'},
+      {id:'RabbitMQ',g:'b'},{id:'Celery',g:'b'},{id:'Bash',g:'b'},
+      {id:'SQL',g:'b'},
+      // ── Frontend & WebGL (20) ──
+      {id:'React',g:'f'},{id:'Next.js',g:'f'},{id:'TypeScript',g:'f'},
+      {id:'TailwindCSS',g:'f'},{id:'WebAssembly',g:'f'},{id:'Three.js',g:'f'},
+      {id:'WebGL',g:'f'},{id:'Svelte',g:'f'},{id:'Vue.js',g:'f'},
+      {id:'Vite',g:'f'},{id:'D3.js',g:'f'},{id:'HTML5 Canvas',g:'f'},
+      {id:'Web Workers',g:'f'},{id:'PWA',g:'f'},{id:'Zustand',g:'f'},
+      {id:'Redux',g:'f'},{id:'Framer Motion',g:'f'},{id:'Vercel',g:'f'},
+      {id:'Webpack',g:'f'},{id:'CSS Grid',g:'f'},
+      // ── Core CS & Applied Math (24) ──
+      {id:'Combinatorics',g:'c'},{id:'Multivariable Calculus',g:'c'},
+      {id:'Graph Theory',g:'c'},{id:'Algorithm Design',g:'c'},
+      {id:'Cryptography',g:'c'},{id:'System Design',g:'c'},
+      {id:'Linear Algebra',g:'c'},{id:'Probability',g:'c'},
+      {id:'Statistics',g:'c'},{id:'Optimization',g:'c'},
+      {id:'Information Theory',g:'c'},{id:'Complexity Theory',g:'c'},
+      {id:'Data Structures',g:'c'},{id:'Compilers',g:'c'},
+      {id:'Operating Systems',g:'c'},{id:'Computer Networks',g:'c'},
+      {id:'Concurrency',g:'c'},{id:'Memory Management',g:'c'},
+      {id:'Cache Design',g:'c'},{id:'Hashing',g:'c'},
+      {id:'Dynamic Programming',g:'c'},{id:'NP-Completeness',g:'c'},
+      {id:'Formal Verification',g:'c'},{id:'Type Theory',g:'c'}
+    ];
+
+    /* ───────────────────── EDGES (~295) ───────────────────── */
+    var edges = [
+      // ── Agentic AI internal ──
+      ['LangChain','LlamaIndex'],['LangChain','OpenAI'],['LangChain','Anthropic'],
+      ['LangChain','Tool Use'],['LangChain','Chain of Thought'],['LangChain','RAG'],
+      ['LangChain','DSPy'],['LangChain','CrewAI'],['LlamaIndex','RAG'],
+      ['AutoGen','Multi-Agent Systems'],['AutoGen','Agent Orchestration'],['AutoGen','OpenAI'],
+      ['OpenAI','Function Calling'],['OpenAI','Anthropic'],
+      ['Anthropic','Function Calling'],['Mistral','OpenAI'],
+      ['DSPy','Prompt Engineering'],['OpenClaw','Agent Orchestration'],
+      ['OpenClaw','Multi-Agent Systems'],['CrewAI','Multi-Agent Systems'],
+      ['CrewAI','Agent Orchestration'],['Semantic Kernel','Function Calling'],
+      ['Semantic Kernel','Agent Orchestration'],['Semantic Kernel','OpenAI'],
+      ['Tool Use','Function Calling'],['Tool Use','Agent Orchestration'],
+      ['Tool Use','ReAct'],['Prompt Engineering','Chain of Thought'],
+      ['Prompt Engineering','ReAct'],['Chain of Thought','ReAct'],
+      ['Multi-Agent Systems','Agent Orchestration'],
+      // ── AI Infrastructure internal ──
+      ['PyTorch','CUDA'],['PyTorch','Triton'],['PyTorch','JAX'],
+      ['PyTorch','Hugging Face'],['PyTorch','DeepSpeed'],['PyTorch','Flash Attention'],
+      ['PyTorch','Training Pipelines'],['PyTorch','Mixed Precision'],
+      ['PyTorch','Gradient Checkpointing'],['JAX','CUDA'],['JAX','Triton'],
+      ['JAX','Training Pipelines'],['JAX','Model Parallelism'],
+      ['CUDA','Triton'],['CUDA','vLLM'],['CUDA','TensorRT-LLM'],['CUDA','Mixed Precision'],
+      ['vLLM','TensorRT-LLM'],['vLLM','Inference Optimization'],['vLLM','Quantization'],
+      ['TensorRT-LLM','Inference Optimization'],['TensorRT-LLM','ONNX'],
+      ['Ray','Training Pipelines'],['Ray','Model Parallelism'],
+      ['Weights & Biases','MLOps'],['Weights & Biases','Training Pipelines'],
+      ['Weights & Biases','Fine-tuning'],['Hugging Face','Transformers'],
+      ['Hugging Face','LoRA'],['Hugging Face','Fine-tuning'],['Hugging Face','ONNX'],
+      ['Transformers','Attention Mechanism'],['Transformers','Tokenization'],
+      ['Transformers','Embeddings'],['Fine-tuning','LoRA'],['Fine-tuning','RLHF'],
+      ['Fine-tuning','Training Pipelines'],['LoRA','Quantization'],
+      ['Flash Attention','Attention Mechanism'],['Flash Attention','Triton'],
+      ['DeepSpeed','Model Parallelism'],['DeepSpeed','Mixed Precision'],
+      ['DeepSpeed','Training Pipelines'],['Distillation','Quantization'],
+      ['Distillation','Training Pipelines'],['ONNX','Inference Optimization'],
+      ['MLOps','Training Pipelines'],['Gradient Checkpointing','Training Pipelines'],
+      ['Mixed Precision','Quantization'],['Embeddings','Tokenization'],
+      ['Inference Optimization','Quantization'],
+      // ── Vector Search & Data Engineering internal ──
+      ['Pinecone','Vector Search'],['Qdrant','Vector Search'],
+      ['Milvus','Vector Search'],['Weaviate','Vector Search'],
+      ['pgvector','PostgreSQL'],['pgvector','Vector Search'],
+      ['ClickHouse','OLAP'],['ClickHouse','Data Lake'],
+      ['Apache Kafka','Stream Processing'],['Apache Kafka','Data Pipelines'],
+      ['Spark','Data Pipelines'],['Spark','ETL Pipelines'],['Spark','Apache Flink'],
+      ['Redis','Stream Processing'],['PostgreSQL','OLAP'],
+      ['MongoDB','Data Pipelines'],['DynamoDB','Data Pipelines'],
+      ['Cassandra','Data Lake'],['Cassandra','Stream Processing'],
+      ['Neo4j','Vector Search'],['Elasticsearch','Data Pipelines'],
+      ['Elasticsearch','Vector Search'],['Apache Flink','Stream Processing'],
+      ['Apache Flink','Data Pipelines'],['Apache Airflow','ETL Pipelines'],
+      ['Apache Airflow','Data Pipelines'],['dbt','ETL Pipelines'],
+      ['dbt','Snowflake'],['Snowflake','OLAP'],['Snowflake','Data Lake'],
+      ['ETL Pipelines','Data Pipelines'],['Feature Store','Data Pipelines'],
+      ['Feature Store','Redis'],['Data Lake','OLAP'],
+      // ── Backend & Cloud internal ──
+      ['Rust','C++'],['Go','Kubernetes'],['Go','gRPC'],['Go','Microservices'],
+      ['Go','Distributed Systems'],['Python','FastAPI'],['Python','Celery'],
+      ['Node.js','REST API'],['Node.js','WebSockets'],['Node.js','GraphQL'],
+      ['FastAPI','REST API'],['FastAPI','Docker'],['FastAPI','gRPC'],
+      ['gRPC','Microservices'],['gRPC','HTTP/2'],['GraphQL','REST API'],
+      ['Kubernetes','Docker'],['Kubernetes','Helm'],['Kubernetes','Service Mesh'],
+      ['Kubernetes','Microservices'],['Docker','CI/CD'],['Docker','Linux'],
+      ['Docker','AWS'],['Terraform','AWS'],['Terraform','GCP'],
+      ['Terraform','Azure'],['Terraform','Kubernetes'],
+      ['AWS','Lambda'],['AWS','S3'],['AWS','EC2'],['AWS','GCP'],['AWS','Azure'],
+      ['Cloudflare Workers','Lambda'],['Distributed Systems','Microservices'],
+      ['Distributed Systems','Load Balancing'],['Distributed Systems','Event-Driven Arch.'],
+      ['Microservices','Service Mesh'],['Microservices','Event-Driven Arch.'],
+      ['C','C++'],['C','Linux'],['Linux','Bash'],['Linux','Nginx'],
+      ['Nginx','Load Balancing'],['Load Balancing','Service Mesh'],
+      ['REST API','HTTP/2'],['REST API','JWT'],['WebSockets','HTTP/2'],
+      ['HTTP/2','TCP/IP'],['OAuth 2.0','JWT'],['OAuth 2.0','TLS/SSL'],
+      ['JWT','TLS/SSL'],['CI/CD','GitHub Actions'],['GitHub Actions','Docker'],
+      ['Prometheus','Grafana'],['Prometheus','Kubernetes'],
+      ['Lambda','S3'],['Lambda','Microservices'],['EC2','S3'],
+      ['Service Mesh','gRPC'],['Event-Driven Arch.','RabbitMQ'],
+      ['RabbitMQ','Celery'],['RabbitMQ','Microservices'],
+      ['Bash','CI/CD'],['GCP','Azure'],
+      // ── Frontend & WebGL internal ──
+      ['React','Next.js'],['React','TypeScript'],['React','TailwindCSS'],
+      ['React','Zustand'],['React','Redux'],['React','Framer Motion'],
+      ['Next.js','Vercel'],['Next.js','TypeScript'],
+      ['TypeScript','Vite'],['TypeScript','Webpack'],
+      ['TailwindCSS','CSS Grid'],['TailwindCSS','Vite'],
+      ['WebAssembly','Three.js'],['Three.js','WebGL'],
+      ['WebGL','HTML5 Canvas'],['Svelte','Vite'],['Svelte','TypeScript'],
+      ['Vue.js','Vite'],['Vue.js','TypeScript'],['D3.js','HTML5 Canvas'],
+      ['HTML5 Canvas','Web Workers'],['Web Workers','PWA'],['PWA','React'],
+      ['Zustand','Redux'],['Webpack','Vite'],['CSS Grid','HTML5 Canvas'],
+      // ── Core CS & Applied Math internal ──
+      ['Combinatorics','Algorithm Design'],['Combinatorics','Graph Theory'],
+      ['Combinatorics','Probability'],['Multivariable Calculus','Linear Algebra'],
+      ['Multivariable Calculus','Optimization'],['Graph Theory','Algorithm Design'],
+      ['Graph Theory','Data Structures'],['Graph Theory','NP-Completeness'],
+      ['Algorithm Design','Data Structures'],['Algorithm Design','Dynamic Programming'],
+      ['Algorithm Design','Complexity Theory'],['Cryptography','Information Theory'],
+      ['Cryptography','Hashing'],['Cryptography','NP-Completeness'],
+      ['System Design','Cache Design'],['Linear Algebra','Optimization'],
+      ['Probability','Statistics'],['Probability','Information Theory'],
+      ['Statistics','Optimization'],['Complexity Theory','NP-Completeness'],
+      ['Data Structures','Hashing'],['Data Structures','Cache Design'],
+      ['Compilers','Type Theory'],['Compilers','Operating Systems'],
+      ['Operating Systems','Concurrency'],['Operating Systems','Memory Management'],
+      ['Concurrency','Memory Management'],['Memory Management','Cache Design'],
+      ['Dynamic Programming','Optimization'],['Formal Verification','Type Theory'],
+      ['Formal Verification','Compilers'],['Hashing','Cache Design'],
+      ['Information Theory','Statistics'],
+      // ── Cross-category connections ──
+      ['Python','PyTorch'],['Python','LangChain'],['Python','DSPy'],
+      ['Python','AutoGen'],['Python','OpenClaw'],['Python','Modal'],
+      ['TypeScript','Node.js'],['WebAssembly','Rust'],
+      ['WebAssembly','Cloudflare Workers'],['CUDA','C++'],
+      ['Ray','Distributed Systems'],['Cassandra','Distributed Systems'],
+      ['Apache Kafka','Event-Driven Arch.'],['Apache Kafka','Java'],
+      ['DynamoDB','AWS'],['Redis','Cache Design'],['Redis','Celery'],
+      ['Neo4j','Graph Theory'],['D3.js','Graph Theory'],
+      ['System Design','Distributed Systems'],['System Design','Microservices'],
+      ['System Design','Load Balancing'],['MLOps','CI/CD'],['MLOps','Docker'],
+      ['MLOps','Apache Airflow'],['Feature Store','MLOps'],
+      ['TLS/SSL','Cryptography'],['Linear Algebra','Embeddings'],
+      ['Linear Algebra','PyTorch'],['Optimization','Training Pipelines'],
+      ['Information Theory','Tokenization'],['Java','Spark'],
+      ['LlamaIndex','Vector Search'],['LlamaIndex','Embeddings'],
+      ['RAG','Vector Search'],['RAG','Embeddings'],
+      ['Mistral','Hugging Face'],['MongoDB','Node.js'],['PostgreSQL','SQL'],
+      ['Operating Systems','Linux'],['Computer Networks','TCP/IP'],
+      ['Computer Networks','Distributed Systems'],['Compilers','C++'],
+      ['Type Theory','TypeScript'],['Concurrency','Go'],['Concurrency','Rust'],
+      ['Memory Management','C'],['Memory Management','Rust'],
+      ['Vercel','AWS'],['Data Lake','S3'],
+      ['Stream Processing','Event-Driven Arch.'],['Spark','Python'],
+      ['OpenAI','RLHF'],['Anthropic','RLHF'],
+      ['Embeddings','Vector Search'],['Pinecone','Embeddings']
+    ].map(function (p) { return { source: p[0], target: p[1] }; });
+
+    /* ───────────────────── DEGREE & ADJACENCY ───────────────────── */
+    var degMap = {};
+    nodes.forEach(function (n) { degMap[n.id] = 0; });
+    edges.forEach(function (e) { degMap[e.source]++; degMap[e.target]++; });
+    nodes.forEach(function (n) {
+      n.degree = degMap[n.id] || 1;
+      n.r = 1.5 + Math.sqrt(n.degree) * 0.7;
+    });
+
+    var adj = {};
+    nodes.forEach(function (n) { adj[n.id] = new Set(); });
+    edges.forEach(function (e) {
+      adj[e.source].add(e.target);
+      adj[e.target].add(e.source);
+    });
+
+    /* ───────────────────── CANVAS ───────────────────── */
+    var W, H, dpr;
+    function resize() {
+      dpr = window.devicePixelRatio || 1;
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+    }
+    resize();
+
+    /* ───────────────────── INITIAL POSITIONS ───────────────────── */
+    var gAngle = { a: 0, i: Math.PI / 3, v: 2 * Math.PI / 3, b: Math.PI, f: 4 * Math.PI / 3, c: 5 * Math.PI / 3 };
+    var spread = Math.min(W, H) * 0.35;
+    nodes.forEach(function (n) {
+      var a = gAngle[n.g] + (Math.random() - 0.5) * 1.0;
+      var r = spread * (0.3 + Math.random() * 0.7);
+      n.x = W / 2 + Math.cos(a) * r;
+      n.y = H / 2 + Math.sin(a) * r;
+    });
+
+    /* ───────────────────── SIMULATION ───────────────────── */
+    var sim = d3.forceSimulation(nodes)
+      .force('link', d3.forceLink(edges).id(function (d) { return d.id; }).distance(80).strength(0.35))
+      .force('charge', d3.forceManyBody().strength(-55).distanceMax(350))
+      .force('x', d3.forceX(W / 2).strength(0.04))
+      .force('y', d3.forceY(H / 2).strength(0.04))
+      .force('collision', d3.forceCollide().radius(function (d) { return d.r + 8; }).strength(0.5))
+      .alphaDecay(0.012)
+      .velocityDecay(0.35);
+
+    /* ───────────────────── HOVER STATE ───────────────────── */
+    var hovered = null;
+    var connSet = new Set();
+
+    /* ───────────────────── RENDER ───────────────────── */
+    function render() {
+      var t = performance.now() * 0.0008;
+      ctx.save();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(dpr, dpr);
+
+      // Regular edges
+      ctx.beginPath();
+      ctx.strokeStyle = isLight() ? 'rgba(55, 65, 110, 0.52)' : 'rgba(140, 150, 180, 0.48)';
+      ctx.lineWidth = isLight() ? 0.55 : 0.5;
+      for (var i = 0; i < edges.length; i++) {
+        var e = edges[i];
+        if (hovered && (e.source === hovered || e.target === hovered)) continue;
+        ctx.moveTo(e.source.x, e.source.y);
+        ctx.lineTo(e.target.x, e.target.y);
+      }
+      ctx.stroke();
+
+      // Highlighted edges
+      if (hovered) {
+        ctx.beginPath();
+        ctx.strokeStyle = rgba(hovered.g, isLight() ? 0.7 : 0.55);
+        ctx.lineWidth = 1.2;
+        for (var j = 0; j < edges.length; j++) {
+          var he = edges[j];
+          if (he.source === hovered || he.target === hovered) {
+            ctx.moveTo(he.source.x, he.source.y);
+            ctx.lineTo(he.target.x, he.target.y);
+          }
+        }
+        ctx.stroke();
+      }
+
+      // Nodes
+      for (var k = 0; k < nodes.length; k++) {
+        var n = nodes[k];
+        var isH = n === hovered;
+        var isC = hovered !== null && connSet.has(n.id);
+
+        if (isH) {
+          ctx.beginPath();
+          ctx.fillStyle = rgba(n.g, 0.12);
+          ctx.arc(n.x, n.y, 22, 0, TAU);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.fillStyle = rgba(n.g, 0.95);
+          ctx.arc(n.x, n.y, n.r * 1.8, 0, TAU);
+          ctx.fill();
+        } else if (isC) {
+          ctx.beginPath();
+          ctx.fillStyle = rgba(n.g, 0.06);
+          ctx.arc(n.x, n.y, 14, 0, TAU);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.fillStyle = rgba(n.g, 0.7);
+          ctx.arc(n.x, n.y, n.r * 1.3, 0, TAU);
+          ctx.fill();
+        } else {
+          var breath = isLight()
+            ? 0.58 + Math.sin(t + n.x * 0.004 + n.y * 0.004) * 0.12
+            : 0.52 + Math.sin(t + n.x * 0.004 + n.y * 0.004) * 0.1;
+          ctx.beginPath();
+          ctx.fillStyle = rgba(n.g, breath);
+          ctx.arc(n.x, n.y, n.r, 0, TAU);
+          ctx.fill();
+        }
+      }
+
+      ctx.restore();
+    }
+
+    /* ───────────────────── ANIMATION LOOP ───────────────────── */
+    function animate() {
+      render();
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    /* ───────────────────── MOUSE EVENTS ───────────────────── */
+    canvas.addEventListener('mousemove', function (e) {
+      var mx = e.clientX, my = e.clientY;
+      var closest = null, minD = 28;
+      for (var i = 0; i < nodes.length; i++) {
+        var n = nodes[i];
+        var d = Math.hypot(mx - n.x, my - n.y);
+        if (d < minD) { minD = d; closest = n; }
+      }
+
+      if (closest !== hovered) {
+        hovered = closest;
+        if (hovered) {
+          connSet = adj[hovered.id];
+          tt.innerHTML = '<strong>' + hovered.id + '</strong><span>' + GL[hovered.g] + '</span>';
+          tt.style.setProperty('--tt-color', rgba(hovered.g, 0.8));
+          tt.className = 'visible';
+        } else {
+          connSet = new Set();
+          tt.className = '';
+        }
+      }
+
+      if (hovered) {
+        tt.style.left = (mx + 14) + 'px';
+        tt.style.top = (my - 10) + 'px';
+      }
+      canvas.style.cursor = hovered ? 'pointer' : 'default';
+    });
+
+    canvas.addEventListener('mouseleave', function () {
+      hovered = null;
+      connSet = new Set();
+      tt.className = '';
+      canvas.style.cursor = 'default';
+    });
+
+    /* ───────────────────── DRAG ───────────────────── */
+    d3.select(canvas).call(
+      d3.drag()
+        .subject(function (event) {
+          var pt = d3.pointer(event, canvas);
+          var closest = null, minD = 28;
+          for (var i = 0; i < nodes.length; i++) {
+            var n = nodes[i];
+            var d = Math.hypot(pt[0] - n.x, pt[1] - n.y);
+            if (d < minD) { minD = d; closest = n; }
+          }
+          return closest;
+        })
+        .on('start', function (event) {
+          if (!event.active) sim.alphaTarget(0.3).restart();
+          event.subject.fx = event.subject.x;
+          event.subject.fy = event.subject.y;
+        })
+        .on('drag', function (event) {
+          event.subject.fx = event.x;
+          event.subject.fy = event.y;
+        })
+        .on('end', function (event) {
+          if (!event.active) sim.alphaTarget(0);
+          event.subject.fx = null;
+          event.subject.fy = null;
+        })
+    );
+
+    /* ───────────────────── RESIZE ───────────────────── */
+    window.addEventListener('resize', function () {
+      resize();
+      sim.force('x', d3.forceX(W / 2).strength(0.04));
+      sim.force('y', d3.forceY(H / 2).strength(0.04));
+      sim.alpha(0.3).restart();
+    });
+  })();
+  </script>
+</body>
+</html>
